@@ -196,7 +196,7 @@ classdef imoverlay
             % Set defaults and parse through variable inputs
             defaults = struct('layers', 1:length(obj.ims), ...
                 'viewtype', 'lbview', ...
-                'viewargs', cell(0));
+                'viewargs', []);
             args = vararginparser(defaults, varargin{:});
 
             % Initialize overlaid image
@@ -230,11 +230,18 @@ classdef imoverlay
 
             end
 
+            % Set viewargs
+            if isempty(args.viewargs)
+                args.viewargs = cell(0);
+            end
+
             % Display the image
             if strcmpi(args.viewtype,'lbview')
                 lbview(im_all,args.viewargs{:},'colormap',cmap_all);
             elseif strcmpi(args.viewtype,'orthoview')
                 orthoview(im_all,args.viewargs{:},'colormap',cmap_all);
+            else
+                error('invalid view type')
             end
 
             % Make colorbars
