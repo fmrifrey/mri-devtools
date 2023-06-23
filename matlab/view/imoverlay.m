@@ -117,27 +117,6 @@ classdef imoverlay
 %               - structure containing arguments for view function
 %               - see orthoview and lbview for more info
 %
-% Example code:
-%
-%   % Create the imoverlay object:
-%   o = imoverlay;
-%
-%   % Add layers with specific properties:
-%   o = o.addlayer('anatomical.nii', 'caxis', [0 1.5]);
-%   o = o.addlayer('condition1.nii', 'caxis', [2 5], 'colormap', hot(128));
-%   o = o.addlayer('condition2.nii', 'caxis', [2 5], 'colormap', ...
-%       cool(128));
-%
-%   % Swap the 2nd and 3rd layer (condition 1 and 2)
-%   o = o.swaplayers(2,3);
-%
-%   % Add labels to the layers
-%   o = o.editlayer(2, 'name', 'condition 2');
-%   o = o.editlayer(3, 'name', 'condition 1');
-%
-%   % Show the overlaid images
-%   o.show;
-%
 
     properties
         ims % Cell array of image structures to overlay
@@ -217,7 +196,7 @@ classdef imoverlay
             % Set defaults and parse through variable inputs
             defaults = struct('layers', 1:length(obj.ims), ...
                 'viewtype', 'lbview', ...
-                'viewargs', {'frame', 1});
+                'viewargs', cell(0));
             args = vararginparser(defaults, varargin{:});
 
             % Initialize overlaid image
