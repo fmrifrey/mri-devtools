@@ -14,12 +14,13 @@ im = ph.getimage(dim);
 % Set up kspace sampling
 [Kx,Ky,Kz] = imgrid(dim./fov,dim);
 k = [Kx(:),Ky(:),Kz(:)];
+clear Kx Ky Kz
 
 % Get the kspace signal
 S = ph.getsignal(k);
 
 % Grid and reconstruct the data
-S_cart = griddata(k(:,1),k(:,2),k(:,3),S,Kx,Ky,Kz);
+S_cart = reshape(S,dim);
 im_recon = ifftc(S_cart);
 
 % Plot results
