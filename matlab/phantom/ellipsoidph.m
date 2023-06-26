@@ -123,7 +123,7 @@ classdef ellipsoidph
 %               - ellipsoid matrix
 %               - see 'e' under constructor for more info
 %
-%   function obj = getsignal(obj,k)
+%   function S = getsignal(obj,k)
 %   
 %       Description: Function to get analytical solution for signal at
 %           kspace sample locations
@@ -138,6 +138,21 @@ classdef ellipsoidph
 %           - S:
 %               - kspace signal at locations
 %               - Nx1 vector representing complex signal
+%
+%   function im = getimage(obj,dim)
+%
+%   Description: Function to get discrete 3D image array of phantom
+%
+%       Static input arguments:
+%           - dim:
+%               - image dimensions
+%               - 3-element vector representing voxel dimensions along
+%                   [x,y,z]
+%               - no defaults
+%  
+%       Function output:
+%           - im:
+%               - 3D image array
 %
     
     properties
