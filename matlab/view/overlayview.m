@@ -1,5 +1,5 @@
-classdef imoverlay
-% classdef imoverlay()
+classdef overlayview
+% classdef overlayview()
 %
 % Part of fmrifrey/mri-devtools software package by David Frey (2023)
 %   git@github.com:fmrifrey/mri-devtools.git
@@ -9,17 +9,17 @@ classdef imoverlay
 %
 % Methods:
 %
-%   function obj = imoverlay()
+%   function obj = overlayview()
 %
-%       Description: Constructor function for imoverlay class
+%       Description: Constructor function for overlayview class
 %
 %       Function Output:
 %           - obj:
-%               - returned output imoverlay object
+%               - returned output overlayview object
 %
 %   function [obj,n] = addlayer(obj,im,varargin)
 %
-%       Description: Function to add a layer to the imoverlay class
+%       Description: Function to add a layer to the overlayview class
 %
 %       Static input arguments:
 %           - im:
@@ -54,14 +54,14 @@ classdef imoverlay
 %
 %       Function output:
 %           - obj:
-%               - returned output imoverlay object with edits
+%               - returned output overlayview object with edits
 %           - n:
 %               - layer index that was just added
 %               - if not returned, function will print the layer number
 %
 %   function obj = swaplayers(obj,n1,n2)
 %       
-%       Description: Function to swap layers within the imoverlay object
+%       Description: Function to swap layers within the overlayview object
 %       
 %       Static input arguments:
 %           - n1:
@@ -75,11 +75,11 @@ classdef imoverlay
 %       
 %       Function output:
 %           - obj:
-%               - returned output imoverlay object with edits
+%               - returned output overlayview object with edits
 %
 %   function obj = editlayer(obj,n,varargin)
 %       
-%       Description: Function to edit a layer within the imoverlay object
+%       Description: Function to edit a layer within the overlayview object
 %       
 %       Static input arguments:
 %           - n:
@@ -98,7 +98,7 @@ classdef imoverlay
 %
 %       Function output:
 %           - obj:
-%               - returned output imoverlay object with edits
+%               - returned output overlayview object with edits
 %
 %   function show(obj,varargin)
 %  
@@ -123,7 +123,7 @@ classdef imoverlay
     end
     
     methods
-        function obj = imoverlay()
+        function obj = overlayview()
             % Initialize ims array
             obj.ims = {};
         end
@@ -256,6 +256,7 @@ classdef imoverlay
                     c.Label.String = imn.name;
                 end
             end
+            clim([0 n]);
 
         end
 

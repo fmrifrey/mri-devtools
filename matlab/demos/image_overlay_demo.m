@@ -24,8 +24,8 @@ tmp = tmp.addlayer('rho', 3, 'd', [-0.1,0.35,0], 'r', [0.12,0.14,0.1], ...
 condition2 = tmp.getimage(dim);
 
 %% Make the figure:
-% Create the imoverlay object
-o = imoverlay;
+% Create the overlayview object
+o = overlayview;
 
 % Add layers with specific properties:
 o = o.addlayer(anotomical, 'caxis', [0 1.5]);
