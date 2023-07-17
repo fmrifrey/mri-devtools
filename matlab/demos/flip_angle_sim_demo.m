@@ -1,5 +1,5 @@
-f_mean = 1/20; % mean precession frequency (kHz)
-N = 2; % number of spins in population
+f_mean = 1/100; % mean precession frequency (kHz)
+N = 1; % number of spins in population
 if (N == 1)
     f_std = 0; % std of precession frequency (kHz)
 else
@@ -10,53 +10,15 @@ t_end = 200; % ms
 t = 0:0.5:t_end; % timing (ms)
 
 % create flip angle schedule
-flips = zeros(length(t),2);
-flips(t == TE/2,1) = 90; % add a tipdown at time 5
+flips = zeros(length(t),1);
+flips(t == TE/2) = 90; % add a tipdown at time 5
 tmp = 1;
 for t_tmp = TE:TE:(t_end - mod(t_end,TE)) % at times 10, 20, 30, 40
-    flips(t == t_tmp,2) = tmp*120; % add a refocuser
+    flips(t == t_tmp) = 1i*tmp*123; % add a refocuser
     tmp = tmp*-1;
 end
 
-%% Run sim
-% create population of precession frequencies
-fn = f_mean + f_std*randn(N,1);
-
-% initialize magnetization
-M = zeros(3,length(t),N); % vector component x time x spin index
-M0 = [0;0;1];
-
-% loop through time points
-for i = 1:length(t)
-    
-    % determine the time differential
-    if i == 1
-        dt = 0;
-    else
-        dt = t(i) - t(i-1);
-    end
-    
-    % loop through spins
-    for n = 1:N
-        
-        % determine the previous magnetization
-        if i == 1
-            Min1 = M0;
-        else
-            Min1 = M(:,i-1,n);
-        end
-        
-        % rotation due to free precession
-        R_fp = rmat3D('z',2*pi*fn(n)*dt);
-        
-        % rotation due to rf flipping
-        R_flip = rmat3D('xy',flips(i,:)/180*pi);
-        
-        % determine magnetization
-        M(:,i,n) = R_flip * R_fp * Min1;
-        
-    end
-end
+M = flipsim(t,flips,'N',N,'f_mu',f_mean,'f_sd',f_std);
 
 %% Plot results
 path = [];
@@ -78,7 +40,10 @@ for i = 1:length(t)
     % plot the path
     if any(abs(flips(i,:)) > 0, 2)
         for j = 0:20
-            path = [path, rmat3D('xy',flips(i,:)/180*pi*j/20)*inv(rmat3D('xy',flips(i,:)/180*pi))*M_net(:,i)];
+            path = [path, ...
+                rmat3D('xy',[real(flips(i)), imag(flips(i))]/180*pi*j/20)\ ...
+                rmat3D('xy',[real(flips(i)), imag(flips(i))]/180*pi/20)* ...
+                M_net(:,i)];
         end
     else
         path = [path, M_net(:,i)];
@@ -98,7 +63,7 @@ for i = 1:length(t)
     
     % plot the flip angles
     subplot(4,2,5:6)
-    plot(t,flips); hold on
+    plot(t,real(flips),t,imag(flips)); hold on
     if isvar('xl'), delete(xl), end
     xl = xline(t(i),'--r'); hold off
     yticks([90 180])
@@ -117,7 +82,8 @@ for i = 1:length(t)
     sgtitle(sprintf('t = %.1fms', t(i)));
     
     % pause and reset
-    pause(0.1)
+    pause(0.01)
+    drawnow
     hold off
     
 end
