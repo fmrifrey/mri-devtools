@@ -30,8 +30,7 @@ o = overlayview;
 % Add layers with specific properties:
 o = o.addlayer(anotomical, 'caxis', [0 1.5]);
 o = o.addlayer(condition1, 'caxis', [2 5], 'cmap', hot(128));
-o = o.addlayer(condition2, 'caxis', [2 5], 'cmap', ...
-  cool(128));
+o = o.addlayer(condition2, 'caxis', [2 5], 'cmap', cool(128));
 
 % Swap the 2nd and 3rd layer (condition 1 and 2)
 o = o.swaplayers(2,3);
