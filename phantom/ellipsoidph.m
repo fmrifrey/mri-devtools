@@ -113,16 +113,6 @@ classdef ellipsoidph
 %           - obj:
 %               - returned output ellipsoidph object with edits
 %
-%   function e = getmatrix(obj)
-%       
-%       Description: Function that returns the ellipsoid matrix
-%           representation of the phantom
-%
-%       Function output:
-%           - e:
-%               - ellipsoid matrix
-%               - see 'e' under constructor for more info
-%
 %   function S = getsignal(obj,k)
 %   
 %       Description: Function to get analytical solution for signal at
@@ -156,7 +146,7 @@ classdef ellipsoidph
 %
     
     properties
-        E % Ellipsoid properties
+        e % Ellipsoid properties
         fov % Field of view (cm)
     end
     
@@ -192,7 +182,7 @@ classdef ellipsoidph
             % Loop through ellipsoids
             for n = 1:size(args.e,1)
                 % Add the layer
-                [obj,~] = obj.addlayer('e', args.e);
+                obj = obj.addlayer(args.e);
             end
 
             % Set fov
@@ -200,122 +190,73 @@ classdef ellipsoidph
 
         end
 
-        function [obj,n] = addlayer(obj,varargin)
-
-            % Set defaults and parse through variable input arguments
-            defaults = struct('e', [], ...
-                'rho', [], ...
-                'r', [], ...
-                'd', [], ...
-                'theta', []);
-            args = vararginparser(defaults, varargin{:});
-
-            % Get layer index
-            n = length(obj.E) + 1;
-
-            % Initialize ellipsoid structure
-            obj.E{n} = struct( ...
-                'rho', [], ... % Amplitude (proton density)
-                'r', [], ... % Radii (x,y,z) (fraction of fov/2)
-                'd', [], ... % Central displacement (x,y,z) (fraction of fov/2)
-                'theta', []); % Rotation angles (x,y,z) (radians)
-
-            % Update parameters
-            if ~isempty(args.rho)
-                obj = obj.editlayer(n,'rho',args.rho);
-            elseif ~isempty(args.e)
-                obj = obj.editlayer(n,'rho',args.e(n,1));
-            end
-
-            if ~isempty(args.r)
-                obj = obj.editlayer(n,'r',args.r);
-            elseif ~isempty(args.e)
-                obj = obj.editlayer(n,'r',args.e(n,2:4));
-            end
-
-            if ~isempty(args.d)
-                obj = obj.editlayer(n,'d',args.d);
-            elseif ~isempty(args.e)
-                obj = obj.editlayer(n,'d',args.e(n,5:7));
-            end
-
-            if ~isempty(args.theta)
-                obj = obj.editlayer(n,'theta',args.theta);
-            elseif ~isempty(args.e)
-                obj = obj.editlayer(n,'theta',args.e(n,8:10));
-            end
-
+        function obj = addlayer(obj,e)
+            obj.e = [obj.e;e]; % append the ellipse matrix
         end
 
         function obj = editlayer(obj,n,varargin)
 
             % Set defaults and parse through variable inputs
-            defaults = obj.E{n};
+            defaults = struct( ...
+                'A', obj.e(n,1), ...
+                'a', obj.e(n,2), ...
+                'b', obj.e(n,3), ...
+                'c', obj.e(n,4), ...
+                'x0', obj.e(n,5), ...
+                'y0', obj.e(n,6), ...
+                'z0', obj.e(n,7), ...
+                'phi', obj.e(n,8), ...
+                'theta', obj.e(n,9), ...
+                'psi', obj.e(n,10) ...
+                );
             args = vararginparser(defaults, varargin{:});
             
             % Set parameters
-            obj.E{n}.rho = args.rho;
-            obj.E{n}.r = args.r;
-            obj.E{n}.d = args.d;
-            obj.E{n}.theta = args.theta;
+            obj.e(n,1) = args.A;
+            obj.e(n,2) = args.a;
+            obj.e(n,3) = args.b;
+            obj.e(n,4) = args.c;
+            obj.e(n,5) = args.x0;
+            obj.e(n,6) = args.y0;
+            obj.e(n,7) = args.z0;
+            obj.e(n,8) = args.phi;
+            obj.e(n,9) = args.theta;
+            obj.e(n,10) = args.psi;
 
         end
 
         function obj = swaplayers(obj,n1,n2)
 
             % Swap the indicies of the E array
-            tmp = obj.E{n1};
-            obj.E{n1} = obj.E{n2};
-            obj.E{n2} = tmp;
-
-        end
-
-        function e = getmatrix(obj)
-            
-            % Initialize e matrix
-            e = zeros(length(obj.E),10);
-
-            % Loop through ellipsoids
-            for n = 1:length(obj.E)
-                % Set the row values
-                e(n,:) = [obj.E{n}.rho, ...
-                    obj.E{n}.r, ...
-                    obj.E{n}.d, ...
-                    obj.E{n}.theta];
-            end
+            tmp = obj.e(n1,:);
+            obj.e(n1,:) = obj.e(n2,:);
+            obj.e(n2,:) = tmp;
 
         end
 
         function S = getsignal(obj,k)
-
-            % Initialize signal vector
-            S = zeros(size(k,1),1);
-
+            
+            % Define bessel functions
+            Jn = @(n,z) sqrt(pi./(2*z)).*besselj(n+0.5,z); % Spherical bessel function of the nth kind
+            Gn = @(n,K) Jn(n,abs(K))./abs(K);
+            
+            % Initialize the signal vector
+            S = zeros(1, size(k,2));
+            
             % Loop through ellipsoids
-            for n = 1:length(obj.E)
-                
-                % Get indexed ellipsoid
-                En = obj.E{n};
+            for n = 1:size(obj.e,1)
 
-                % Get properties
-                rho = En.rho;
-                abc = obj.fov(:)'/2 .* En.r;
-                d = obj.fov(:)'/2 .* En.d;
-                A = rmat3D('zyx', pi/180*En.theta(end:-1:1));
+                % Get ellipsoid properties
+                rho = obj.e(n,1);
+                D = diag(obj.fov(:)'/2 .* obj.e(n,2:4));
+                rc = obj.fov(:)/2 .* obj.e(n,5:7)';
+                R = rmat3D('zxz', pi/180*obj.e(n,10:-1:8));
 
-                % Calculate kspace signal
-                kn0 = k(vecnorm(k,2,2)~=0,:);
-                ktd = kn0*d';
-                K = vecnorm(kn0*A'.*abc,2,2);
-                S(vecnorm(k,2,2)~=0) = S(vecnorm(k,2,2)~=0) + ...
-                    rho * abs(det(A')) * prod(abc) * ...
-                    exp(-1i * 2*pi*ktd) .* ...
-                    ( sin(2*pi*K) - 2*pi*K.*cos(2*pi*K) ) ./ (2*pi^2*K.^3);
-                S(vecnorm(k,2,2)==0) = S(vecnorm(k,2,2)==0) + ...
-                    rho*4/3*pi*prod(abc);
+                % Add fourier transform of the current ellipsoid
+                S = S + ...
+                    rho*2*pi*abs(det(D))*exp(-1i*2*pi*rc'*k).*Gn(1,2*pi*vecnorm(D*R'*k,2,1));
 
             end
-
         end
 
         function im = getimage(obj,dim)
@@ -325,22 +266,19 @@ classdef ellipsoidph
 
             % Make image grid
             [X,Y,Z] = imgrid(obj.fov, dim);
-            x = [X(:),Y(:),Z(:)];
+            r = [X(:),Y(:),Z(:)]';
 
             % Loop through ellipsoids
-            for n = 1:length(obj.E)
-
-                % Get indexed ellipsoid
-                En = obj.E{n};
+            for n = 1:size(obj.e,1)
 
                 % Get properties
-                rho = En.rho;
-                abc = obj.fov(:)'/2 .* En.r;
-                d = obj.fov(:)'/2 .* En.d;
-                A = rmat3D('zyx', pi/180*En.theta(end:-1:1));
+                rho = obj.e(n,1);
+                D = diag(obj.fov(:)'/2 .* obj.e(n,2:4));
+                rc = obj.fov(:)/2 .* obj.e(n,5:7)';
+                R = rmat3D('zxz', pi/180*obj.e(n,10:-1:8));
 
                 % Determine region and add amplitude
-                ROI = vecnorm((x - d)*A' ./ abc, 2, 2) <= 1;
+                ROI = vecnorm(D^-1*R'*(r - rc), 2, 1) <= 1;
                 im(ROI) = im(ROI) + rho;
 
             end
