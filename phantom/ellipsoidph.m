@@ -10,6 +10,42 @@ classdef ellipsoidph
 %   resonance imaging phantom in the Fourier domain, Magn. Reson. Med.
 %   58(2):430-436, https://doi.org/10.1002/mrm.21292
 %
+%   ellispoids are stored as 1x10 vectors in the following format:
+%   ellipsoidph.e = [A,a,b,c,x0,y0,z0,phi,theta,psi]
+%           - 'A':
+%               - intensity of ellipsoid
+%               - float describing intensity
+%           - 'a':
+%               - length of x semiaxis
+%               - float describing length as fraction of x-fov (range [0,1])
+%           - 'b':
+%               - length of y semiaxis
+%               - float describing length as fraction of y-fov (range [0,1])
+%           - 'c':
+%               - length of z semiaxis
+%               - float describing length as fraction of z-fov (range [0,1])
+%           - 'x0':
+%               - centroid x coordinate
+%               - float describing x coordinate as fraction of x-fov (range
+%                   [-1,1])
+%           - 'y0':
+%               - centroid y coordinate
+%               - float describing y coordinate as fraction of y-fov (range
+%                   [-1,1])
+%           - 'z0':
+%               - centroid z coordinate
+%               - float describing y coordinate as fraction of z-fov (range
+%                   [-1,1])
+%           - 'phi':
+%               - 1st rotation euler angle (about z)
+%               - float describing euler angle in deg
+%           - 'theta':
+%               - 2nd rotation euler angle (about x)
+%               - float describing euler angle in deg
+%           - 'psi':
+%               - 3rd rotation euler angle (about z)
+%               - float describing euler angle in deg
+%
 %
 % Methods:
 %
@@ -39,40 +75,14 @@ classdef ellipsoidph
 %       Description: Function to add a layer to the ellipsoidph class
 %
 %       Static input arguments:
-%           - im:
-%               - image to display
-%               - a float/double 3D image array or name of a .nii file
-%               - only first frame will be used if there is more than 1
-%               - no default; required argument
-%
-%       Variable input arguments:
-%           - 'e':
+%           - e:
 %               - 'e' matrix for layers to add
 %               - see 'e' under constructor function for more info
-%               - no default
-%           - 'rho':
-%               - magnitude/proton density of ellipsoid layer
-%               - scalar value describing the intensity
-%               - no default
-%           - 'r':
-%               - radii of ellipsoid layer
-%               - 3-element vector describing the ellipsoid radii as a
-%                   fraction of fov
-%               - no default
-%           - 'd':
-%               - central displacement of ellipsoid layer
-%               - 3-element vector describing the ellipsoid offset as a
-%                   fraction of fov
-%               - no default
-%           - 'theta':
-%               - rotations of ellipsoid layer
-%               - 3-element vector describing the rotations about the
-%                   origin in degrees
 %               - no default
 %
 %       Function output:
 %           - obj:
-%               - returned output imoverlay object with edits
+%               - returned output ellipsoidph object with edits
 %           - n:
 %               - layer index that was just added
 %               - if not returned, function will print the layer number
@@ -85,15 +95,17 @@ classdef ellipsoidph
 %           - n:
 %               - layer to edit
 %               - integer describing layer index
-%               - no default
+%               - no default, must specify layer
 %
 %       Variable input arguments:
-%           - Can change all layer properties (same arguments as in
-%               addlayer(), other than 'e')
+%           - 'A','a','b','c','x0','y0','z0','phi','theta','psi':
+%               - see paramter definitions under ellipsoidph() description
+%               - no default (parameter will not be overwritten unless
+%                   specified)
 %
 %       Function output:
 %           - obj:
-%               - returned output imoverlay object with edits
+%               - returned output ellipsoidph object with edits
 %
 %   function obj = swaplayers(obj,n1,n2)
 %       
@@ -190,8 +202,9 @@ classdef ellipsoidph
 
         end
 
-        function obj = addlayer(obj,e)
+        function [obj,n] = addlayer(obj,e)
             obj.e = [obj.e;e]; % append the ellipse matrix
+            n = size(obj.e,1);
         end
 
         function obj = editlayer(obj,n,varargin)
